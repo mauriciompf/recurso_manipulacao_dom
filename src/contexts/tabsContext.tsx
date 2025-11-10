@@ -5,9 +5,12 @@ const TabsContext = createContext<TabsContextType | null>(null);
 
 function TabsContextProvider({ children }: { children: React.ReactNode }) {
   const [tabIndex, setTabIndex] = useState<number>(2);
+  const [tabIndexInput, setTabIndexInput] = useState<number>(0);
 
   return (
-    <TabsContext.Provider value={{ tabIndex, setTabIndex }}>
+    <TabsContext.Provider
+      value={{ tabIndex, setTabIndex, tabIndexInput, setTabIndexInput }}
+    >
       {children}
     </TabsContext.Provider>
   );

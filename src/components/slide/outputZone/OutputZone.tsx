@@ -1,5 +1,5 @@
 import { useTabsContext } from "../../../contexts/tabsContext";
-import { TabsNavegate } from "../../tabsNavegate";
+import { TabsNavegate } from "../../TabsNavegate";
 
 function OutputZone() {
   const { tabIndex } = useTabsContext();
@@ -47,7 +47,7 @@ function OutputZone() {
 
   return (
     <div>
-      <TabsNavegate />
+      <TabsNavegate zoneType="outputZone" />
       <TabContent />
     </div>
   );
