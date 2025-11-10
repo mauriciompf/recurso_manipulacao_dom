@@ -1,4 +1,4 @@
-import ProgressBar from "./header/progressBar";
+import ProgressBar from "./header/ProgressBar";
 import InputZone from "./inputZone/InputZone";
 import OutputZone from "./outputZone/OutputZone";
 
@@ -11,8 +11,8 @@ function Slide() {
         </header>
 
         <main>
-          <InputZone />
           <OutputZone />
+          <InputZone />
         </main>
       </div>
     </section>
