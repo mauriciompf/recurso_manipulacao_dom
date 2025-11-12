@@ -6,10 +6,21 @@ const TabsContext = createContext<TabsContextType | null>(null);
 function TabsContextProvider({ children }: { children: React.ReactNode }) {
   const [tabIndex, setTabIndex] = useState<number>(2);
   const [tabIndexInput, setTabIndexInput] = useState<number>(0);
+  const [scriptInput, setScriptInput] = useState<string>("");
+  const [shouldExecuteScript, setShouldExecuteScript] = useState(false);
 
   return (
     <TabsContext.Provider
-      value={{ tabIndex, setTabIndex, tabIndexInput, setTabIndexInput }}
+      value={{
+        tabIndex,
+        setTabIndex,
+        tabIndexInput,
+        setTabIndexInput,
+        scriptInput,
+        setScriptInput,
+        shouldExecuteScript,
+        setShouldExecuteScript,
+      }}
     >
       {children}
     </TabsContext.Provider>

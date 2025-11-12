@@ -154,13 +154,19 @@ function TabContentInput({
 }
 
 function InputZone() {
-  const { tabIndexInput } = useTabsContext();
-  const [scriptInput, setScriptInput] = useState<string>("");
+  const {
+    tabIndexInput,
+    scriptInput,
+    setScriptInput,
+    shouldExecuteScript,
+    setShouldExecuteScript,
+  } = useTabsContext();
 
   const handleOnChangeScript = (event: ChangeEvent<HTMLTextAreaElement>) => {
     const value = event.target.value;
-
     setScriptInput(value);
+
+    setShouldExecuteScript(true);
   };
 
   const handleOnClickRun = () => {
