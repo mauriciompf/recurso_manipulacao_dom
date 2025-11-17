@@ -1,7 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
 import { CacheProvider, Global, css } from "@emotion/react";
 import createCache from "@emotion/cache";
+import hljs from "highlight.js";
+import javascript from "highlight.js/lib/languages/javascript";
+hljs.registerLanguage("javascript", javascript);
+
+hljs.highlightAll();
 
 function CreateHTML() {
   return (
@@ -52,10 +57,86 @@ function App() {
   const [cache, setCache] = useState<any | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
+  const [textAreaInput, setTextAreaInput] = useState<string | null>();
+
+  const handleOnChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    // setTextAreaInput(value);
+
+    if (value.startsWith(IMPORTS)) {
+      setTextAreaInput(value.slice(IMPORTS.length));
+    } else {
+      // If imports are not at the beginning, just set the whole value
+      // This handles cases where user might have deleted the imports
+      setTextAreaInput(value);
+    }
+  };
+
+  const IMPORTS = `import { albuns } from "./dados.js";\nconst galeria = document.querySelector(".galeria");\n`;
+
+  const handleOnClick = () => {
+    const iframe = iframeRef.current;
+    if (!iframe || !iframe.contentWindow) return;
+
+    // Remove previous injected scripts
+    const oldScripts = iframe.contentDocument.querySelectorAll(
+      "script[data-dynamic]"
+    );
+    oldScripts.forEach((script) => script.remove());
+
+    // Create new script element
+    const scriptEl = iframe.contentDocument.createElement("script");
+    scriptEl.setAttribute("data-dynamic", "true");
+    scriptEl.textContent = `
+    try {
+      ${textAreaInput ? textAreaInput : ""}
+    } catch (error) {
+      console.error('Dynamic script error:', error);
+    }
+  `;
+
+    iframe.contentDocument.head.appendChild(scriptEl);
+
+    //     const scriptTest = `
+    //   for (let i = 0; i < albuns.length; i++) {
+    // const img = document.createElement("img");
+    // img.src = albuns[i].imagem;
+    // img.className = "galeria-img";
+    // img.alt = albuns[i].titulo;
+    // galeria.appendChild(img);
+    // }
+    //     `;
+
+    // if (textAreaInput) {
+    //   // console.log(textAreaInput);
+    //   iframe?.contentWindow?.eval(textAreaInput);
+    // }
+
+    // iframe?.contentWindow?.eval(textAreaInput);
+    // setTextAreaInput(jsPlaceHolder);
+  };
+
+  useEffect(() => {
+    const messageHandler = (event: MessageEvent) => {
+      if (event.data.type === "EXECUTE_SCRIPT") {
+        try {
+          // Create a function from the code string
+          const func = new Function(event.data.code);
+          func();
+        } catch (error) {
+          console.error("Error executing script:", error);
+        }
+      }
+    };
+
+    window.addEventListener("message", messageHandler);
+    return () => window.removeEventListener("message", messageHandler);
+  }, []);
+
   useEffect(() => {
     const iframe = iframeRef.current;
 
-    if (!iframe) return;
+    if (!iframe || !iframe?.contentWindow) return;
 
     const handleLoad = () => {
       const body = iframe.contentWindow?.document?.body;
@@ -79,7 +160,15 @@ function App() {
       if (scriptEl) {
         scriptEl.type = "module";
         scriptEl.src = "./src/script.js";
+
         iframe.contentDocument?.head.appendChild(scriptEl);
+
+        // console.log(iframe.contentWindow?.document);
+        const jsPlaceHolder = `
+        const p = document.createElement("p");
+        p.textContent = "lorem lorem loloreeaopsdamsdmskodaskodmnosmdpasmd";
+        galeria.appendChild(p);
+      `;
 
         return () => {
           if (iframe.contentDocument?.head.contains(scriptEl)) {
@@ -96,7 +185,7 @@ function App() {
     }
 
     return () => iframe.removeEventListener("load", handleLoad);
-  }, []);
+  }, [textAreaInput]);
 
   return (
     <main className="size-full h-screen grid place-items-center">
@@ -117,11 +206,27 @@ function App() {
             </CacheProvider>
           </div>
 
-          <div className="bg-[#393D3F] min-[700px]:min-h-[250px] max-h-[150px] size-full relative">
-            <textarea className="overflow-auto resize-none border-none outline-none size-full p-2 font-mono text-white relative"></textarea>
+          <div className="text-sm bg-[#393D3F] min-[700px]:min-h-[250px] max-h-[150px] size-full relative">
+            <textarea
+              value={IMPORTS}
+              readOnly
+              spellCheck="false"
+              title="Você não pode mudar estas linhas"
+              className="overflow-hidden resize-none border-none outline-none tracking-widest size-full p-2 font-mono text-white relative bg-gray-700 opacity-80 cursor-not-allowed"
+              style={{ height: "20%" }}
+            />
+            <textarea
+              value={textAreaInput || ""}
+              onChange={handleOnChange}
+              spellCheck="false"
+              className="overflow-auto resize-none border-none outline-none tracking-widest size-full p-2 font-mono text-white relative bg-[#393D3F]"
+              style={{ height: "80%" }}
+              placeholder="Escreva sua solução aqui..."
+            />
             <button
+              onClick={handleOnClick}
               type="button"
-              className="cursor-pointer font-bold absolute bottom-2 right-2 bg-[#D54747] text-white p-2 rounded-md "
+              className="cursor-pointer font-bold absolute bottom-2 right-2 bg-[#D54747] text-white p-2 rounded-md"
             >
               RODAR
             </button>
