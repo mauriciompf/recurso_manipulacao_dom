@@ -31,14 +31,6 @@ export const albuns = [
     pais: "Brasil",
     estilo: ["MPB", "Folk Rock"],
   },
-  // {
-  //   imagem: "./src/assets/img/gilberto_gil_dois.webp",
-  //   artista: "Gilberto Gil",
-  //   titulo: "Refavela",
-  //   ano: 1977,
-  //   pais: "Brasil",
-  //   estilo: ["MPB"],
-  // },
   {
     imagem: "./src/assets/img/gilberto_gil.webp",
     artista: "Gilberto Gil",
