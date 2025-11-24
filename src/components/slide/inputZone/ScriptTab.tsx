@@ -1,4 +1,4 @@
-import type { ChangeEvent } from "react";
+import { useEffect, type ChangeEvent } from "react";
 import { IMPORTS } from "../../../constants/data";
 import { useDomContext } from "../../../hooks/useDomContext";
 
@@ -16,8 +16,16 @@ function ScriptTab() {
   };
 
   const handleOnClick = () => {
-    const iframe = iframeRef?.current;
-    if (!iframe || !iframe.contentWindow || !iframe.contentDocument) return;
+    if (!iframeRef?.current) {
+      console.error("iframeRef is null or undefined");
+      return;
+    }
+
+    const iframe = iframeRef.current;
+    if (!iframe.contentWindow || !iframe.contentDocument) {
+      console.error("iframe content not accessible");
+      return;
+    }
 
     const oldScripts = iframe.contentDocument.querySelectorAll(
       "script[data-dynamic]"
@@ -36,16 +44,30 @@ function ScriptTab() {
     iframe.contentDocument.head.appendChild(scriptEl);
   };
 
+  const consoleOld = console.log;
+
+  console.log = (...args) => {
+    consoleOld.apply(console, args);
+
+    const message = args
+      .map((args) =>
+        typeof args === "object" ? JSON.stringify(args) : String(args)
+      )
+      .join(" ");
+  };
+
   return (
     <>
       <textarea
         value={IMPORTS}
         readOnly
+        id="imports"
         spellCheck="false"
         title="Você não pode mudar estas linhas"
         className="overflow-hidden resize-none border-none outline-none tracking-widest size-full p-2 font-mono text-white h-[20%] relative bg-gray-700 opacity-80 cursor-not-allowed"
       />
       <textarea
+        id="inputScript"
         value={textAreaInput || ""}
         onChange={handleOnChange}
         spellCheck="false"

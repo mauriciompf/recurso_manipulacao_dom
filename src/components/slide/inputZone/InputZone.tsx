@@ -15,7 +15,6 @@ function InputZone() {
         return <ScriptTab />;
       case "index.html":
         return <HtmlTab />;
-        "";
       case "dados.js":
         return <DadosTab />;
       default:
