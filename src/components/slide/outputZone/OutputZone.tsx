@@ -7,17 +7,16 @@ import Requisitos from "./Requisitos";
 import { createPortal } from "react-dom";
 import { CacheProvider } from "@emotion/react";
 import CreateHTML from "../../CreateHTML";
+import TabButtons from "./Tabs";
 
 function OutputZone() {
-  const [currentTab, setCurrentTab] = useState<
-    "documento" | "console" | "requisitos"
-  >("console");
+  const [currentTab, setCurrentTab] = useState<string>("console");
 
   const [mountNode, setMountNode] = useState<HTMLElement | null>(null);
   const [cache, setCache] = useState<any | null>(null); // ! ANY
   const { iframeRef, textAreaInput } = useDomContext();
 
-  function Tabs() {
+  function TabContent() {
     switch (currentTab) {
       case "console":
         return <Console />;
@@ -29,85 +28,56 @@ function OutputZone() {
   }
 
   useEffect(() => {
+    if (!iframeRef?.current) {
+      console.error("iframeRef is null or undefined");
+      return;
+    }
+
     const iframe = iframeRef.current;
-    if (!iframe || !iframe?.contentWindow) return;
+    const iframeDocument = iframe.contentDocument;
+    if (!iframe.contentWindow || !iframeDocument) {
+      console.error("iframe content not accessible");
+      return;
+    }
 
     const handleLoad = () => {
-      const body = iframe.contentWindow?.document?.body;
+      const iframeBody = iframeDocument.body;
+      if (iframeBody) setMountNode(iframeBody);
 
-      if (body) {
-        setMountNode(body);
-      }
-
+      // Insert emotion styles into iframe (head)
       const cacheConfig = createCache({
         key: "css",
-        container: iframe.contentWindow?.document?.head,
+        container: iframeDocument.head,
         prepend: true,
       });
+      if (cacheConfig) setCache(cacheConfig);
 
-      if (cacheConfig) {
-        setCache(cacheConfig);
-      }
-
-      const scriptEl = iframe.contentDocument?.createElement("script");
-
+      // Insert external JavaScript file into iframe (head) (imports)
+      const scriptEl = iframeDocument.createElement("script");
       if (scriptEl) {
         scriptEl.type = "module";
         scriptEl.src = "./src/script.js";
 
-        iframe.contentDocument?.head.appendChild(scriptEl);
+        iframeDocument.head.appendChild(scriptEl);
 
         return () => {
-          if (iframe.contentDocument?.head.contains(scriptEl)) {
-            iframe.contentDocument?.head.removeChild(scriptEl);
-          }
+          if (iframeDocument.head.contains(scriptEl))
+            iframeDocument.head.removeChild(scriptEl);
         };
       }
     };
 
+    // Call load function if iframe is full loaded
     iframe.addEventListener("load", handleLoad);
 
-    if (iframe.contentDocument?.readyState === "complete") {
-      handleLoad();
-    }
+    if (iframeDocument.readyState === "complete") handleLoad();
 
     return () => iframe.removeEventListener("load", handleLoad);
   }, [iframeRef, textAreaInput]);
 
   return (
     <>
-      <div className="bg-black flex gap-2 font-bold">
-        <button
-          type="button"
-          onClick={() => setCurrentTab("documento")}
-          className={clsx(
-            { "bg-[#393D3F] opacity-100": currentTab === "documento" },
-            "text-white cursor-pointer p-1 px-2 pl-2 opacity-50"
-          )}
-        >
-          documento
-        </button>
-        <button
-          type="button"
-          onClick={() => setCurrentTab("console")}
-          className={clsx(
-            { "bg-[#393D3F] opacity-100": currentTab === "console" },
-            "px-2 text-white cursor-pointer opacity-50"
-          )}
-        >
-          console
-        </button>
-        <button
-          type="button"
-          onClick={() => setCurrentTab("requisitos")}
-          className={clsx(
-            { "bg-[#393D3F] opacity-100": currentTab === "requisitos" },
-            "px-2 text-white cursor-pointer opacity-50"
-          )}
-        >
-          requisitos
-        </button>
-      </div>
+      <TabButtons setCurrentTab={setCurrentTab} currentTab={currentTab} />
 
       <div
         className={clsx(
@@ -128,7 +98,7 @@ function OutputZone() {
         </CacheProvider>
       </div>
 
-      {currentTab !== "documento" && <Tabs />}
+      {currentTab !== "documento" && <TabContent />}
     </>
   );
 }

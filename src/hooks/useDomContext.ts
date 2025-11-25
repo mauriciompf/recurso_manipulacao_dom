@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { DomContext } from "../contexts/domContext";
+import { DomContext } from "../contexts/DomContext";
 
 const useDomContext = () => {
   const context = useContext(DomContext);
